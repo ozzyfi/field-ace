@@ -32,6 +32,10 @@ function HoldScreen() {
   const [whyNot, setWhyNot] = useState("");
   const [nextAction, setNextAction] = useState("");
   const [owner, setOwner] = useState("");
+  const [partName, setPartName] = useState("");
+  const [partCode, setPartCode] = useState("");
+  const [partUrgency, setPartUrgency] = useState<"normal" | "acil" | "kritik">("normal");
+  const [partStock, setPartStock] = useState<"stokta_yok" | "siparis" | "onay">("stokta_yok");
 
   if (!job) return null;
 

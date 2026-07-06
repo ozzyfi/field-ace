@@ -177,8 +177,8 @@ function aiReply(job: Job, question: string): ChatMessage {
   }
 
   if (q.includes("yeterli") || q.includes("kapat")) {
-    const hasPhoto = job.evidence.some((e) => e.type === "photo");
-    const hasMeasure = job.evidence.some((e) => e.type === "measurement");
+    const hasPhoto = job.evidence.some((e) => e.type === "foto" || e.type === "parca_foto");
+    const hasMeasure = job.evidence.some((e) => e.type === "olcum");
     if (hasPhoto && hasMeasure) {
       return {
         id,

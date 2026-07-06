@@ -9,38 +9,166 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as JobsJobIdIndexRouteImport } from './routes/jobs.$jobId.index'
+import { Route as JobsJobIdSummaryRouteImport } from './routes/jobs.$jobId.summary'
+import { Route as JobsJobIdHoldRouteImport } from './routes/jobs.$jobId.hold'
+import { Route as JobsJobIdFlowRouteImport } from './routes/jobs.$jobId.flow'
+import { Route as JobsJobIdEvidenceRouteImport } from './routes/jobs.$jobId.evidence'
+import { Route as JobsJobIdCloseRouteImport } from './routes/jobs.$jobId.close'
+import { Route as JobsJobIdArriveRouteImport } from './routes/jobs.$jobId.arrive'
+import { Route as JobsJobIdAiRouteImport } from './routes/jobs.$jobId.ai'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JobsJobIdIndexRoute = JobsJobIdIndexRouteImport.update({
+  id: '/jobs/$jobId/',
+  path: '/jobs/$jobId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsJobIdSummaryRoute = JobsJobIdSummaryRouteImport.update({
+  id: '/jobs/$jobId/summary',
+  path: '/jobs/$jobId/summary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsJobIdHoldRoute = JobsJobIdHoldRouteImport.update({
+  id: '/jobs/$jobId/hold',
+  path: '/jobs/$jobId/hold',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsJobIdFlowRoute = JobsJobIdFlowRouteImport.update({
+  id: '/jobs/$jobId/flow',
+  path: '/jobs/$jobId/flow',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsJobIdEvidenceRoute = JobsJobIdEvidenceRouteImport.update({
+  id: '/jobs/$jobId/evidence',
+  path: '/jobs/$jobId/evidence',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsJobIdCloseRoute = JobsJobIdCloseRouteImport.update({
+  id: '/jobs/$jobId/close',
+  path: '/jobs/$jobId/close',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsJobIdArriveRoute = JobsJobIdArriveRouteImport.update({
+  id: '/jobs/$jobId/arrive',
+  path: '/jobs/$jobId/arrive',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsJobIdAiRoute = JobsJobIdAiRouteImport.update({
+  id: '/jobs/$jobId/ai',
+  path: '/jobs/$jobId/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/jobs/$jobId/ai': typeof JobsJobIdAiRoute
+  '/jobs/$jobId/arrive': typeof JobsJobIdArriveRoute
+  '/jobs/$jobId/close': typeof JobsJobIdCloseRoute
+  '/jobs/$jobId/evidence': typeof JobsJobIdEvidenceRoute
+  '/jobs/$jobId/flow': typeof JobsJobIdFlowRoute
+  '/jobs/$jobId/hold': typeof JobsJobIdHoldRoute
+  '/jobs/$jobId/summary': typeof JobsJobIdSummaryRoute
+  '/jobs/$jobId/': typeof JobsJobIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/jobs/$jobId/ai': typeof JobsJobIdAiRoute
+  '/jobs/$jobId/arrive': typeof JobsJobIdArriveRoute
+  '/jobs/$jobId/close': typeof JobsJobIdCloseRoute
+  '/jobs/$jobId/evidence': typeof JobsJobIdEvidenceRoute
+  '/jobs/$jobId/flow': typeof JobsJobIdFlowRoute
+  '/jobs/$jobId/hold': typeof JobsJobIdHoldRoute
+  '/jobs/$jobId/summary': typeof JobsJobIdSummaryRoute
+  '/jobs/$jobId': typeof JobsJobIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/jobs/$jobId/ai': typeof JobsJobIdAiRoute
+  '/jobs/$jobId/arrive': typeof JobsJobIdArriveRoute
+  '/jobs/$jobId/close': typeof JobsJobIdCloseRoute
+  '/jobs/$jobId/evidence': typeof JobsJobIdEvidenceRoute
+  '/jobs/$jobId/flow': typeof JobsJobIdFlowRoute
+  '/jobs/$jobId/hold': typeof JobsJobIdHoldRoute
+  '/jobs/$jobId/summary': typeof JobsJobIdSummaryRoute
+  '/jobs/$jobId/': typeof JobsJobIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/sitemap.xml'
+    | '/jobs/$jobId/ai'
+    | '/jobs/$jobId/arrive'
+    | '/jobs/$jobId/close'
+    | '/jobs/$jobId/evidence'
+    | '/jobs/$jobId/flow'
+    | '/jobs/$jobId/hold'
+    | '/jobs/$jobId/summary'
+    | '/jobs/$jobId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/sitemap.xml'
+    | '/jobs/$jobId/ai'
+    | '/jobs/$jobId/arrive'
+    | '/jobs/$jobId/close'
+    | '/jobs/$jobId/evidence'
+    | '/jobs/$jobId/flow'
+    | '/jobs/$jobId/hold'
+    | '/jobs/$jobId/summary'
+    | '/jobs/$jobId'
+  id:
+    | '__root__'
+    | '/'
+    | '/sitemap.xml'
+    | '/jobs/$jobId/ai'
+    | '/jobs/$jobId/arrive'
+    | '/jobs/$jobId/close'
+    | '/jobs/$jobId/evidence'
+    | '/jobs/$jobId/flow'
+    | '/jobs/$jobId/hold'
+    | '/jobs/$jobId/summary'
+    | '/jobs/$jobId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  JobsJobIdAiRoute: typeof JobsJobIdAiRoute
+  JobsJobIdArriveRoute: typeof JobsJobIdArriveRoute
+  JobsJobIdCloseRoute: typeof JobsJobIdCloseRoute
+  JobsJobIdEvidenceRoute: typeof JobsJobIdEvidenceRoute
+  JobsJobIdFlowRoute: typeof JobsJobIdFlowRoute
+  JobsJobIdHoldRoute: typeof JobsJobIdHoldRoute
+  JobsJobIdSummaryRoute: typeof JobsJobIdSummaryRoute
+  JobsJobIdIndexRoute: typeof JobsJobIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +176,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/jobs/$jobId/': {
+      id: '/jobs/$jobId/'
+      path: '/jobs/$jobId'
+      fullPath: '/jobs/$jobId/'
+      preLoaderRoute: typeof JobsJobIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/$jobId/summary': {
+      id: '/jobs/$jobId/summary'
+      path: '/jobs/$jobId/summary'
+      fullPath: '/jobs/$jobId/summary'
+      preLoaderRoute: typeof JobsJobIdSummaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/$jobId/hold': {
+      id: '/jobs/$jobId/hold'
+      path: '/jobs/$jobId/hold'
+      fullPath: '/jobs/$jobId/hold'
+      preLoaderRoute: typeof JobsJobIdHoldRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/$jobId/flow': {
+      id: '/jobs/$jobId/flow'
+      path: '/jobs/$jobId/flow'
+      fullPath: '/jobs/$jobId/flow'
+      preLoaderRoute: typeof JobsJobIdFlowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/$jobId/evidence': {
+      id: '/jobs/$jobId/evidence'
+      path: '/jobs/$jobId/evidence'
+      fullPath: '/jobs/$jobId/evidence'
+      preLoaderRoute: typeof JobsJobIdEvidenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/$jobId/close': {
+      id: '/jobs/$jobId/close'
+      path: '/jobs/$jobId/close'
+      fullPath: '/jobs/$jobId/close'
+      preLoaderRoute: typeof JobsJobIdCloseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/$jobId/arrive': {
+      id: '/jobs/$jobId/arrive'
+      path: '/jobs/$jobId/arrive'
+      fullPath: '/jobs/$jobId/arrive'
+      preLoaderRoute: typeof JobsJobIdArriveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs/$jobId/ai': {
+      id: '/jobs/$jobId/ai'
+      path: '/jobs/$jobId/ai'
+      fullPath: '/jobs/$jobId/ai'
+      preLoaderRoute: typeof JobsJobIdAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  JobsJobIdAiRoute: JobsJobIdAiRoute,
+  JobsJobIdArriveRoute: JobsJobIdArriveRoute,
+  JobsJobIdCloseRoute: JobsJobIdCloseRoute,
+  JobsJobIdEvidenceRoute: JobsJobIdEvidenceRoute,
+  JobsJobIdFlowRoute: JobsJobIdFlowRoute,
+  JobsJobIdHoldRoute: JobsJobIdHoldRoute,
+  JobsJobIdSummaryRoute: JobsJobIdSummaryRoute,
+  JobsJobIdIndexRoute: JobsJobIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -89,6 +89,7 @@ export interface Job {
   createdAt: string;
   dueAt?: string;
   history: HistoryItem[];
+  bringItems: string[];
   evidence: Evidence[];
   closure?: ClosureSummary;
   hold?: HoldSummary;
@@ -121,6 +122,7 @@ export const initialJobs: Job[] = [
     history: [
       {
         id: "h1",
+        kind: "ariza",
         date: "12 gün önce",
         summary: "Yüksek titreşim",
         rootCause: "Kaplin hizasızlığı",
@@ -128,6 +130,7 @@ export const initialJobs: Job[] = [
       },
       {
         id: "h2",
+        kind: "parca",
         date: "38 gün önce",
         summary: "Ses ve ısınma",
         rootCause: "Rulman aşınması",
@@ -136,11 +139,19 @@ export const initialJobs: Job[] = [
       },
       {
         id: "h3",
+        kind: "kontrol",
         date: "71 gün önce",
         summary: "Titreşim uyarısı",
         rootCause: "Kaplin hizasızlığı",
         action: "Hizalama",
       },
+    ],
+    bringItems: [
+      "Titreşim ölçer",
+      "Lazer hizalama seti",
+      "Termal kamera / sıcaklık ölçer",
+      "Alyan ve anahtar seti",
+      "Yedek kaplin elemanı",
     ],
     evidence: [],
   },

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { CheckCircle2, ChevronRight, PauseCircle, Sparkles, XCircle } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { getAiBrief } from "@/lib/ai-mock";
 import { setStatus, useJob } from "@/lib/store";

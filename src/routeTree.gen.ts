@@ -15,6 +15,7 @@ import { Route as JobsJobIdFlowRouteImport } from './routes/jobs.$jobId.flow'
 import { Route as JobsJobIdEvidenceRouteImport } from './routes/jobs.$jobId.evidence'
 import { Route as JobsJobIdCloseRouteImport } from './routes/jobs.$jobId.close'
 import { Route as JobsJobIdArriveRouteImport } from './routes/jobs.$jobId.arrive'
+import { Route as JobsJobIdAiRouteImport } from './routes/jobs.$jobId.ai'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,9 +47,15 @@ const JobsJobIdArriveRoute = JobsJobIdArriveRouteImport.update({
   path: '/jobs/$jobId/arrive',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JobsJobIdAiRoute = JobsJobIdAiRouteImport.update({
+  id: '/jobs/$jobId/ai',
+  path: '/jobs/$jobId/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/jobs/$jobId/ai': typeof JobsJobIdAiRoute
   '/jobs/$jobId/arrive': typeof JobsJobIdArriveRoute
   '/jobs/$jobId/close': typeof JobsJobIdCloseRoute
   '/jobs/$jobId/evidence': typeof JobsJobIdEvidenceRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/jobs/$jobId/ai': typeof JobsJobIdAiRoute
   '/jobs/$jobId/arrive': typeof JobsJobIdArriveRoute
   '/jobs/$jobId/close': typeof JobsJobIdCloseRoute
   '/jobs/$jobId/evidence': typeof JobsJobIdEvidenceRoute
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/jobs/$jobId/ai': typeof JobsJobIdAiRoute
   '/jobs/$jobId/arrive': typeof JobsJobIdArriveRoute
   '/jobs/$jobId/close': typeof JobsJobIdCloseRoute
   '/jobs/$jobId/evidence': typeof JobsJobIdEvidenceRoute
@@ -76,6 +85,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/jobs/$jobId/ai'
     | '/jobs/$jobId/arrive'
     | '/jobs/$jobId/close'
     | '/jobs/$jobId/evidence'
@@ -84,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/jobs/$jobId/ai'
     | '/jobs/$jobId/arrive'
     | '/jobs/$jobId/close'
     | '/jobs/$jobId/evidence'
@@ -92,6 +103,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/jobs/$jobId/ai'
     | '/jobs/$jobId/arrive'
     | '/jobs/$jobId/close'
     | '/jobs/$jobId/evidence'
@@ -101,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  JobsJobIdAiRoute: typeof JobsJobIdAiRoute
   JobsJobIdArriveRoute: typeof JobsJobIdArriveRoute
   JobsJobIdCloseRoute: typeof JobsJobIdCloseRoute
   JobsJobIdEvidenceRoute: typeof JobsJobIdEvidenceRoute
@@ -152,11 +165,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobsJobIdArriveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/jobs/$jobId/ai': {
+      id: '/jobs/$jobId/ai'
+      path: '/jobs/$jobId/ai'
+      fullPath: '/jobs/$jobId/ai'
+      preLoaderRoute: typeof JobsJobIdAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  JobsJobIdAiRoute: JobsJobIdAiRoute,
   JobsJobIdArriveRoute: JobsJobIdArriveRoute,
   JobsJobIdCloseRoute: JobsJobIdCloseRoute,
   JobsJobIdEvidenceRoute: JobsJobIdEvidenceRoute,

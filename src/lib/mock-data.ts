@@ -23,14 +23,25 @@ export interface Evidence {
   createdAt: string;
 }
 
+export type HistoryKind = "bakim" | "ariza" | "parca" | "kontrol" | "test";
+
 export interface HistoryItem {
   id: string;
+  kind: HistoryKind;
   date: string;
   summary: string;
   rootCause: string;
   action: string;
   partChanged?: string;
 }
+
+export const historyKindLabel: Record<HistoryKind, string> = {
+  bakim: "Son bakım",
+  ariza: "Son arıza",
+  parca: "Değişen parça",
+  kontrol: "Yapılan kontrol",
+  test: "Son test",
+};
 
 export interface ClosureSummary {
   symptom: string;
@@ -78,6 +89,7 @@ export interface Job {
   createdAt: string;
   dueAt?: string;
   history: HistoryItem[];
+  bringItems: string[];
   evidence: Evidence[];
   closure?: ClosureSummary;
   hold?: HoldSummary;
@@ -110,6 +122,7 @@ export const initialJobs: Job[] = [
     history: [
       {
         id: "h1",
+        kind: "ariza",
         date: "12 gün önce",
         summary: "Yüksek titreşim",
         rootCause: "Kaplin hizasızlığı",
@@ -117,6 +130,7 @@ export const initialJobs: Job[] = [
       },
       {
         id: "h2",
+        kind: "parca",
         date: "38 gün önce",
         summary: "Ses ve ısınma",
         rootCause: "Rulman aşınması",
@@ -125,11 +139,19 @@ export const initialJobs: Job[] = [
       },
       {
         id: "h3",
+        kind: "kontrol",
         date: "71 gün önce",
         summary: "Titreşim uyarısı",
         rootCause: "Kaplin hizasızlığı",
         action: "Hizalama",
       },
+    ],
+    bringItems: [
+      "Titreşim ölçer",
+      "Lazer hizalama seti",
+      "Termal kamera / sıcaklık ölçer",
+      "Alyan ve anahtar seti",
+      "Yedek kaplin elemanı",
     ],
     evidence: [],
   },
@@ -150,11 +172,19 @@ export const initialJobs: Job[] = [
     history: [
       {
         id: "h1",
+        kind: "bakim",
         date: "1 yıl önce",
         summary: "Yıllık bakım",
         rootCause: "Rutin",
         action: "Filtre + gaz kontrolü",
       },
+    ],
+    bringItems: [
+      "Manometre seti",
+      "Filtre kontrol ekipmanı",
+      "Multimetre",
+      "Temizlik spreyi",
+      "Gaz kontrol ekipmanı",
     ],
     evidence: [],
   },
@@ -172,7 +202,22 @@ export const initialJobs: Job[] = [
     source: "dashboard",
     createdAt: iso(-6),
     dueAt: iso(24),
-    history: [],
+    history: [
+      {
+        id: "h1",
+        kind: "bakim",
+        date: "7 gün önce",
+        summary: "Haftalık kontrol",
+        rootCause: "Rutin",
+        action: "Yağ, yakıt, akü kontrolü",
+      },
+    ],
+    bringItems: [
+      "Multimetre",
+      "Akü test cihazı",
+      "Yağ seviye çubuğu",
+      "Temiz bez ve eldiven",
+    ],
     evidence: [],
   },
   {
@@ -189,6 +234,13 @@ export const initialJobs: Job[] = [
     source: "manuel",
     createdAt: iso(-8),
     history: [],
+    bringItems: [
+      "Sensör (IFM VSA001)",
+      "M8 konnektör ve kablo",
+      "Delme / matkap seti",
+      "Multimetre",
+      "Kablo bağı ve etiket",
+    ],
     evidence: [],
   },
   {
@@ -204,7 +256,22 @@ export const initialJobs: Job[] = [
     assignedBy: "İSG",
     source: "dashboard",
     createdAt: iso(-10),
-    history: [],
+    history: [
+      {
+        id: "h1",
+        kind: "test",
+        date: "30 gün önce",
+        summary: "Aylık güvenlik testi",
+        rootCause: "Rutin",
+        action: "Tüm switch'ler test edildi · sonuç OK",
+      },
+    ],
+    bringItems: [
+      "Multimetre",
+      "Test etiketi",
+      "İSG kilit-etiket (LOTO) seti",
+      "El feneri",
+    ],
     evidence: [],
   },
 ];

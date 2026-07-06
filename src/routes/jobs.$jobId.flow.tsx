@@ -16,9 +16,9 @@ function FlowChoice() {
   if (!job) return null;
 
   return (
-    <AppShell title="Nasıl ilerleyelim?" subtitle={job.code} back>
+    <AppShell title="Şimdi nasıl ilerleyeceksin?" subtitle={job.code} back>
       <p className="text-sm text-muted-foreground">
-        Sahaya vardın ve {job.evidence.length} kanıt topladın. Şimdi ne yapmak istiyorsun?
+        Toplanan kanıtlara ve ilk gözleme göre işi hızlıca kapatabilir, AI ile teşhis alabilir veya destek/parça beklemeye alabilirsin.
       </p>
 
       <div className="mt-5 space-y-3">
@@ -35,8 +35,8 @@ function FlowChoice() {
           jobId={job.id}
           tone="info"
           icon={<Brain className="h-5 w-5" />}
-          title="Kanıt topla, AI ile teşhis et"
-          desc="Kök nedenden emin değilsen. Geçmiş vakalar ve önerilen kontrollerle ilerle."
+          title="AI ile teşhis et"
+          desc="Kök nedenden emin değilsen. Ekipman geçmişi, benzer vakalar ve önerilen kontrollerle ilerle."
         />
         <FlowCard
           to="/jobs/$jobId/hold"

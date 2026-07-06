@@ -1,18 +1,23 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Camera,
+  CheckCircle2,
   FileText,
   Gauge,
+  HelpCircle,
+  MapPin,
   Mic,
   Package,
+  QrCode,
   Video,
+  Wrench,
   X,
   Zap,
 } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { addEvidence, removeEvidence, useJob } from "@/lib/store";
-import { evidenceTypeLabel, type EvidenceType } from "@/lib/mock-data";
+import { addEvidence, removeEvidence, setStatus, useJob } from "@/lib/store";
+import { evidenceTypeLabel, taskTypeLabel, type EvidenceType } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/jobs/$jobId/evidence")({
   head: () => ({
@@ -30,15 +35,31 @@ const QUICK: { type: EvidenceType; icon: React.ReactNode }[] = [
   { type: "parca_foto", icon: <Package className="h-5 w-5" /> },
 ];
 
+type VerifyMode = "qr" | "manuel" | "belirsiz" | null;
+
 function EvidenceScreen() {
   const { jobId } = Route.useParams();
   const job = useJob(jobId);
   const navigate = useNavigate();
   const [note, setNote] = useState("");
   const [measurement, setMeasurement] = useState("");
+  const [verify, setVerify] = useState<VerifyMode>(null);
+  const [showEvidenceHint, setShowEvidenceHint] = useState(false);
 
   if (!job) return null;
   const count = job.evidence.length;
+  const canContinue = count > 0;
+
+  const onContinue = () => {
+    if (!canContinue) {
+      setShowEvidenceHint(true);
+      return;
+    }
+    if (job.status === "atandi" || job.status === "yoldayim") {
+      setStatus(job.id, "sahadayim");
+    }
+    navigate({ to: "/jobs/$jobId/flow", params: { jobId: job.id } });
+  };
 
   return (
     <AppShell
@@ -48,19 +69,66 @@ function EvidenceScreen() {
       footer={
         <button
           type="button"
-          disabled={count === 0}
-          onClick={() =>
-            navigate({ to: "/jobs/$jobId/flow", params: { jobId: job.id } })
-          }
+          onClick={onContinue}
           className="btn-primary"
+          aria-disabled={!canContinue}
         >
-          Devam et ({count} kanıt)
+          Devam et {count > 0 ? `(${count} kanıt)` : ""}
         </button>
       }
     >
       <div className="space-y-5">
+        {/* Job header */}
+        <section className="card-surface px-3 py-3">
+          <div className="flex items-center gap-1.5">
+            <span className="chip bg-secondary text-muted-foreground">
+              {taskTypeLabel[job.taskType]}
+            </span>
+            <span className="text-xs text-muted-foreground">{job.code}</span>
+          </div>
+          <h1 className="mt-1 text-base font-semibold leading-snug">{job.title}</h1>
+          <div className="mt-1.5 space-y-0.5 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <Zap className="h-3 w-3" /> {job.equipment}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <MapPin className="h-3 w-3" /> {job.location}
+            </div>
+          </div>
+        </section>
+
+        {/* Equipment verification */}
+        <section>
+          <SectionTitle>Ekipman doğrulandı mı?</SectionTitle>
+          <div className="mt-2 grid grid-cols-3 gap-2">
+            <VerifyBtn
+              active={verify === "qr"}
+              onClick={() => setVerify("qr")}
+              icon={<QrCode className="h-4 w-4" />}
+              label="QR / barkod"
+            />
+            <VerifyBtn
+              active={verify === "manuel"}
+              onClick={() => setVerify("manuel")}
+              icon={<CheckCircle2 className="h-4 w-4" />}
+              label="Manuel"
+            />
+            <VerifyBtn
+              active={verify === "belirsiz"}
+              onClick={() => setVerify("belirsiz")}
+              icon={<HelpCircle className="h-4 w-4" />}
+              label="Emin değilim"
+            />
+          </div>
+          {verify === "belirsiz" ? (
+            <p className="mt-2 text-xs text-warning-foreground">
+              Fotoğraf veya ekipman etiketi ekle; merkez ekip doğrulaması yardımcı olabilir.
+            </p>
+          ) : null}
+        </section>
+
         <p className="text-sm text-muted-foreground">
-          En az bir kanıt topla. Fotoğraf, ölçüm ya da kısa bir not yeterli.
+          En az bir kanıt toplaman gerekiyor: fotoğraf, ölçüm veya kısa not.
         </p>
 
         <section>
@@ -180,8 +248,53 @@ function EvidenceScreen() {
             </ul>
           </section>
         ) : null}
+
+        {showEvidenceHint && !canContinue ? (
+          <div className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-foreground">
+            Devam etmek için en az bir kanıt (fotoğraf, ölçüm veya yazılı gözlem) ekle.
+          </div>
+        ) : null}
+
+        {job.bringItems.length > 0 ? (
+          <section>
+            <SectionTitle>Yanına aldığın</SectionTitle>
+            <ul className="mt-2 card-surface divide-y divide-border">
+              {job.bringItems.slice(0, 3).map((item, i) => (
+                <li key={i} className="flex items-center gap-2 px-3 py-1.5 text-xs">
+                  <Wrench className="h-3 w-3 text-muted-foreground" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </div>
     </AppShell>
+  );
+}
+
+function VerifyBtn({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`card-surface flex flex-col items-center gap-1 px-2 py-2 text-xs font-medium ${
+        active ? "border-accent bg-accent/15 text-accent-foreground" : ""
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 

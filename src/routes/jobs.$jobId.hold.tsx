@@ -32,6 +32,10 @@ function HoldScreen() {
   const [whyNot, setWhyNot] = useState("");
   const [nextAction, setNextAction] = useState("");
   const [owner, setOwner] = useState("");
+  const [partName, setPartName] = useState("");
+  const [partCode, setPartCode] = useState("");
+  const [partUrgency, setPartUrgency] = useState<"normal" | "acil" | "kritik">("normal");
+  const [partStock, setPartStock] = useState<"stokta_yok" | "siparis" | "onay">("stokta_yok");
 
   if (!job) return null;
 
@@ -91,6 +95,75 @@ function HoldScreen() {
             })}
           </div>
         </section>
+
+        {reason === "parca_bekliyor" ? (
+          <section className="card-surface space-y-2 px-3 py-3">
+            <Label>Parça bilgisi</Label>
+            <input
+              value={partName}
+              onChange={(e) => setPartName(e.target.value)}
+              placeholder="Parça adı (örn: Rulman SKF 6208-2RS)"
+              className="w-full rounded-lg border border-input bg-surface px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
+            />
+            <input
+              value={partCode}
+              onChange={(e) => setPartCode(e.target.value)}
+              placeholder="Parça kodu (opsiyonel)"
+              className="w-full rounded-lg border border-input bg-surface px-3 py-2 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
+            />
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Aciliyet
+              </div>
+              <div className="mt-1 grid grid-cols-3 gap-2">
+                {(["normal", "acil", "kritik"] as const).map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    onClick={() => setPartUrgency(u)}
+                    className={`rounded-lg border px-2 py-1.5 text-xs font-medium ${
+                      partUrgency === u
+                        ? "border-accent bg-accent/15 text-accent-foreground"
+                        : "border-border"
+                    }`}
+                  >
+                    {u === "normal" ? "Normal" : u === "acil" ? "Acil" : "Kritik"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Stok durumu
+              </div>
+              <div className="mt-1 grid grid-cols-3 gap-2">
+                {(
+                  [
+                    ["stokta_yok", "Stokta yok"],
+                    ["siparis", "Sipariş gerekli"],
+                    ["onay", "Onay gerekli"],
+                  ] as const
+                ).map(([v, l]) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setPartStock(v)}
+                    className={`rounded-lg border px-2 py-1.5 text-xs font-medium ${
+                      partStock === v
+                        ? "border-accent bg-accent/15 text-accent-foreground"
+                        : "border-border"
+                    }`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              İpucu: Eski parçanın fotoğrafını Kanıt ekranında ekleyebilirsin.
+            </p>
+          </section>
+        ) : null}
 
         <TextField
           label="Şu ana kadar ne kontrol edildi?"

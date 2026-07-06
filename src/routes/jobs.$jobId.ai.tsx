@@ -32,7 +32,7 @@ function AiScreen() {
 
   return (
     <AppShell
-      title="ToolA Saha Asistanı"
+      title="AI ile Teşhis Et"
       subtitle={job.code}
       back
       footer={
@@ -56,6 +56,24 @@ function AiScreen() {
       }
     >
       <div className="space-y-5">
+        <p className="text-sm text-muted-foreground">
+          ToolA, topladığın kanıtları, ekipman geçmişini, benzer vakaları ve teknik kaynakları birlikte değerlendirir.
+        </p>
+
+        {job.evidence.length > 0 ? (
+          <section>
+            <SectionTitle>Toplanan kanıtlar</SectionTitle>
+            <ul className="mt-2 card-surface divide-y divide-border">
+              {job.evidence.map((ev) => (
+                <li key={ev.id} className="px-3 py-1.5 text-xs">
+                  <span className="font-medium">{ev.label}</span>
+                  {ev.value ? `: ${ev.value}` : ev.note ? ` — ${ev.note}` : ""}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
         <section className="card-surface px-4 py-3">
           <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-info">
             <Sparkles className="h-3.5 w-3.5" />
@@ -63,7 +81,7 @@ function AiScreen() {
           </div>
           <p className="mt-1 text-sm leading-relaxed text-foreground">{brief.intro}</p>
           <p className="mt-2 text-[11px] text-muted-foreground">
-            Kaynak: İş emri #{job.code.split("-")[1]} · geçmiş kapanış notları · bakım kılavuzu
+            Kaynak: İş emri #{job.code.split("-")[1]} · ekipman geçmişi · geçmiş kapanış notları · bakım kılavuzu
           </p>
         </section>
 

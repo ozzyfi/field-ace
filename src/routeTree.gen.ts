@@ -17,7 +17,6 @@ import { Route as JobsJobIdHoldRouteImport } from './routes/jobs.$jobId.hold'
 import { Route as JobsJobIdFlowRouteImport } from './routes/jobs.$jobId.flow'
 import { Route as JobsJobIdEvidenceRouteImport } from './routes/jobs.$jobId.evidence'
 import { Route as JobsJobIdCloseRouteImport } from './routes/jobs.$jobId.close'
-import { Route as JobsJobIdArriveRouteImport } from './routes/jobs.$jobId.arrive'
 import { Route as JobsJobIdAiRouteImport } from './routes/jobs.$jobId.ai'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -60,11 +59,6 @@ const JobsJobIdCloseRoute = JobsJobIdCloseRouteImport.update({
   path: '/jobs/$jobId/close',
   getParentRoute: () => rootRouteImport,
 } as any)
-const JobsJobIdArriveRoute = JobsJobIdArriveRouteImport.update({
-  id: '/jobs/$jobId/arrive',
-  path: '/jobs/$jobId/arrive',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const JobsJobIdAiRoute = JobsJobIdAiRouteImport.update({
   id: '/jobs/$jobId/ai',
   path: '/jobs/$jobId/ai',
@@ -75,7 +69,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/jobs/$jobId/ai': typeof JobsJobIdAiRoute
-  '/jobs/$jobId/arrive': typeof JobsJobIdArriveRoute
   '/jobs/$jobId/close': typeof JobsJobIdCloseRoute
   '/jobs/$jobId/evidence': typeof JobsJobIdEvidenceRoute
   '/jobs/$jobId/flow': typeof JobsJobIdFlowRoute
@@ -87,7 +80,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/jobs/$jobId/ai': typeof JobsJobIdAiRoute
-  '/jobs/$jobId/arrive': typeof JobsJobIdArriveRoute
   '/jobs/$jobId/close': typeof JobsJobIdCloseRoute
   '/jobs/$jobId/evidence': typeof JobsJobIdEvidenceRoute
   '/jobs/$jobId/flow': typeof JobsJobIdFlowRoute
@@ -100,7 +92,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/jobs/$jobId/ai': typeof JobsJobIdAiRoute
-  '/jobs/$jobId/arrive': typeof JobsJobIdArriveRoute
   '/jobs/$jobId/close': typeof JobsJobIdCloseRoute
   '/jobs/$jobId/evidence': typeof JobsJobIdEvidenceRoute
   '/jobs/$jobId/flow': typeof JobsJobIdFlowRoute
@@ -114,7 +105,6 @@ export interface FileRouteTypes {
     | '/'
     | '/sitemap.xml'
     | '/jobs/$jobId/ai'
-    | '/jobs/$jobId/arrive'
     | '/jobs/$jobId/close'
     | '/jobs/$jobId/evidence'
     | '/jobs/$jobId/flow'
@@ -126,7 +116,6 @@ export interface FileRouteTypes {
     | '/'
     | '/sitemap.xml'
     | '/jobs/$jobId/ai'
-    | '/jobs/$jobId/arrive'
     | '/jobs/$jobId/close'
     | '/jobs/$jobId/evidence'
     | '/jobs/$jobId/flow'
@@ -138,7 +127,6 @@ export interface FileRouteTypes {
     | '/'
     | '/sitemap.xml'
     | '/jobs/$jobId/ai'
-    | '/jobs/$jobId/arrive'
     | '/jobs/$jobId/close'
     | '/jobs/$jobId/evidence'
     | '/jobs/$jobId/flow'
@@ -151,7 +139,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   JobsJobIdAiRoute: typeof JobsJobIdAiRoute
-  JobsJobIdArriveRoute: typeof JobsJobIdArriveRoute
   JobsJobIdCloseRoute: typeof JobsJobIdCloseRoute
   JobsJobIdEvidenceRoute: typeof JobsJobIdEvidenceRoute
   JobsJobIdFlowRoute: typeof JobsJobIdFlowRoute
@@ -218,13 +205,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobsJobIdCloseRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/jobs/$jobId/arrive': {
-      id: '/jobs/$jobId/arrive'
-      path: '/jobs/$jobId/arrive'
-      fullPath: '/jobs/$jobId/arrive'
-      preLoaderRoute: typeof JobsJobIdArriveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/jobs/$jobId/ai': {
       id: '/jobs/$jobId/ai'
       path: '/jobs/$jobId/ai'
@@ -239,7 +219,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   JobsJobIdAiRoute: JobsJobIdAiRoute,
-  JobsJobIdArriveRoute: JobsJobIdArriveRoute,
   JobsJobIdCloseRoute: JobsJobIdCloseRoute,
   JobsJobIdEvidenceRoute: JobsJobIdEvidenceRoute,
   JobsJobIdFlowRoute: JobsJobIdFlowRoute,

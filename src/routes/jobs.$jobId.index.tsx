@@ -1,16 +1,18 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   AlertTriangle,
   Clock,
   History,
   MapPin,
-  Navigation,
+  Package,
   User,
+  Wrench,
   Zap,
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { useJob, setStatus } from "@/lib/store";
+import { useJob } from "@/lib/store";
 import {
+  historyKindLabel,
   priorityLabel,
   sourceLabel,
   statusLabel,
@@ -35,28 +37,15 @@ function JobDetail() {
   if (!job) return <NotFound />;
 
   const primaryLabel =
-    job.status === "atandi"
-      ? "Sahaya gidiyorum"
-      : job.status === "yoldayim"
-        ? "Sahadayım"
-        : job.status === "tamamlandi"
-          ? "Kapanış özetini gör"
-          : "Devam et";
+    job.status === "tamamlandi" || job.status === "beklemede"
+      ? "Özeti gör"
+      : "Devam et";
 
   const onPrimary = () => {
-    if (job.status === "atandi") {
-      setStatus(job.id, "yoldayim");
-    } else if (job.status === "yoldayim") {
-      setStatus(job.id, "sahadayim");
-      navigate({ to: "/jobs/$jobId/arrive", params: { jobId: job.id } });
-    } else if (job.status === "sahadayim") {
-      navigate({ to: "/jobs/$jobId/arrive", params: { jobId: job.id } });
-    } else if (job.status === "teshis") {
-      navigate({ to: "/jobs/$jobId/ai", params: { jobId: job.id } });
-    } else if (job.status === "beklemede") {
+    if (job.status === "tamamlandi" || job.status === "beklemede") {
       navigate({ to: "/jobs/$jobId/summary", params: { jobId: job.id } });
-    } else if (job.status === "tamamlandi") {
-      navigate({ to: "/jobs/$jobId/summary", params: { jobId: job.id } });
+    } else {
+      navigate({ to: "/jobs/$jobId/evidence", params: { jobId: job.id } });
     }
   };
 
@@ -120,60 +109,60 @@ function JobDetail() {
           </div>
         ) : null}
 
-        {job.history.length > 0 ? (
+        {job.bringItems.length > 0 ? (
           <section>
-            <div className="mb-2 flex items-center gap-2 px-1">
-              <History className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className="mb-1 flex items-center gap-2 px-1">
+              <Package className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Benzer geçmiş
+                Yanına Al
               </span>
             </div>
+            <p className="mb-2 px-1 text-xs text-muted-foreground">
+              Sahaya gitmeden önce önerilen ekipman ve kontroller
+            </p>
             <ul className="card-surface divide-y divide-border">
-              {job.history.map((h) => (
-                <li key={h.id} className="px-3 py-2.5 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{h.rootCause}</span>
-                    <span className="text-xs text-muted-foreground">{h.date}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {h.summary} → {h.action}
-                    {h.partChanged ? ` (${h.partChanged})` : ""}
-                  </p>
+              {job.bringItems.map((item, i) => (
+                <li
+                  key={i}
+                  className="flex items-center gap-2 px-3 py-2 text-sm"
+                >
+                  <Wrench className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
           </section>
         ) : null}
 
-        <section>
-          <div className="mb-2 flex items-center justify-between px-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Kanıt durumu
-            </span>
-            <Link
-              to="/jobs/$jobId/evidence"
-              params={{ jobId: job.id }}
-              className="text-xs font-semibold text-accent-foreground underline underline-offset-2"
-            >
-              Kanıt ekle
-            </Link>
-          </div>
-          <div className="card-surface px-3 py-3 text-sm">
-            {job.evidence.length === 0 ? (
-              <p className="text-muted-foreground">Henüz kanıt yok.</p>
-            ) : (
-              <p>
-                <span className="font-semibold">{job.evidence.length}</span> kanıt toplandı
-              </p>
-            )}
-          </div>
-        </section>
-
-        {job.status === "atandi" ? (
-          <div className="rounded-lg bg-info/10 px-3 py-2.5 text-xs text-info">
-            <Navigation className="mr-1 inline h-3.5 w-3.5" />
-            İşe başlamak için sahaya git ve ekipmanı doğrula.
-          </div>
+        {job.history.length > 0 ? (
+          <section>
+            <div className="mb-1 flex items-center gap-2 px-1">
+              <History className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Ekipman Geçmişi
+              </span>
+            </div>
+            <p className="mb-2 px-1 text-xs text-muted-foreground">
+              Bu ekipmanda kayıtlı son işlemler
+            </p>
+            <ul className="card-surface divide-y divide-border">
+              {job.history.map((h) => (
+                <li key={h.id} className="px-3 py-2.5 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-accent-foreground">
+                      {historyKindLabel[h.kind]}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{h.date}</span>
+                  </div>
+                  <p className="mt-0.5 font-medium">{h.summary}</p>
+                  <p className="text-xs text-muted-foreground">
+                    → {h.action}
+                    {h.partChanged ? ` (${h.partChanged})` : ""}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
         ) : null}
       </div>
     </AppShell>

@@ -172,11 +172,19 @@ export const initialJobs: Job[] = [
     history: [
       {
         id: "h1",
+        kind: "bakim",
         date: "1 yıl önce",
         summary: "Yıllık bakım",
         rootCause: "Rutin",
         action: "Filtre + gaz kontrolü",
       },
+    ],
+    bringItems: [
+      "Manometre seti",
+      "Filtre kontrol ekipmanı",
+      "Multimetre",
+      "Temizlik spreyi",
+      "Gaz kontrol ekipmanı",
     ],
     evidence: [],
   },
@@ -194,7 +202,22 @@ export const initialJobs: Job[] = [
     source: "dashboard",
     createdAt: iso(-6),
     dueAt: iso(24),
-    history: [],
+    history: [
+      {
+        id: "h1",
+        kind: "bakim",
+        date: "7 gün önce",
+        summary: "Haftalık kontrol",
+        rootCause: "Rutin",
+        action: "Yağ, yakıt, akü kontrolü",
+      },
+    ],
+    bringItems: [
+      "Multimetre",
+      "Akü test cihazı",
+      "Yağ seviye çubuğu",
+      "Temiz bez ve eldiven",
+    ],
     evidence: [],
   },
   {
@@ -211,6 +234,13 @@ export const initialJobs: Job[] = [
     source: "manuel",
     createdAt: iso(-8),
     history: [],
+    bringItems: [
+      "Sensör (IFM VSA001)",
+      "M8 konnektör ve kablo",
+      "Delme / matkap seti",
+      "Multimetre",
+      "Kablo bağı ve etiket",
+    ],
     evidence: [],
   },
   {
@@ -226,7 +256,22 @@ export const initialJobs: Job[] = [
     assignedBy: "İSG",
     source: "dashboard",
     createdAt: iso(-10),
-    history: [],
+    history: [
+      {
+        id: "h1",
+        kind: "test",
+        date: "30 gün önce",
+        summary: "Aylık güvenlik testi",
+        rootCause: "Rutin",
+        action: "Tüm switch'ler test edildi · sonuç OK",
+      },
+    ],
+    bringItems: [
+      "Multimetre",
+      "Test etiketi",
+      "İSG kilit-etiket (LOTO) seti",
+      "El feneri",
+    ],
     evidence: [],
   },
 ];

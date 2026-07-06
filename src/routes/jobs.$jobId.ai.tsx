@@ -20,7 +20,14 @@ function AiScreen() {
   const [confirmedChecks, setConfirmedChecks] = useState<Set<string>>(new Set());
   const [confirmedCause, setConfirmedCause] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (job && job.status !== "teshis" && job.status !== "beklemede" && job.status !== "tamamlandi") {
+      setStatus(job.id, "teshis");
+    }
+  }, [job]);
+
   if (!job || !brief) return null;
+
 
   if (job.status !== "teshis" && job.status !== "beklemede" && job.status !== "tamamlandi") {
     setStatus(job.id, "teshis");

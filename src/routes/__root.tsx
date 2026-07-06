@@ -78,19 +78,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "theme-color", content: "#f7f5ef" },
-      { title: "ToolA · Teknisyen" },
+      { title: "İşlerim · ToolA Teknisyen" },
       {
         name: "description",
         content:
           "ToolA saha teknisyeni uygulaması: atanan işleri aç, kanıt topla, AI ile teşhis al, kanıtlı şekilde kapat.",
       },
-      { property: "og:title", content: "ToolA · Teknisyen" },
+      { property: "og:title", content: "İşlerim · ToolA Teknisyen" },
       {
         property: "og:description",
         content: "Sahada hızlı, kanıtlı ve kök nedene bağlı müdahale.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "İşlerim · ToolA Teknisyen" },
+      { name: "description", content: "Sana atanan saha işlerini gör, sıradakini aç, sahaya çık." },
+      { property: "og:description", content: "Sana atanan saha işlerini gör, sıradakini aç, sahaya çık." },
+      { name: "twitter:description", content: "Sana atanan saha işlerini gör, sıradakini aç, sahaya çık." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b37dbeeb-71b0-4914-88cd-2bd9e9f33a96/id-preview-ca7badad--009a960d-4d78-4d18-bcc8-0d81cee199db.lovable.app-1783363711043.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b37dbeeb-71b0-4914-88cd-2bd9e9f33a96/id-preview-ca7badad--009a960d-4d78-4d18-bcc8-0d81cee199db.lovable.app-1783363711043.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

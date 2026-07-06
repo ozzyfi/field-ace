@@ -23,14 +23,25 @@ export interface Evidence {
   createdAt: string;
 }
 
+export type HistoryKind = "bakim" | "ariza" | "parca" | "kontrol" | "test";
+
 export interface HistoryItem {
   id: string;
+  kind: HistoryKind;
   date: string;
   summary: string;
   rootCause: string;
   action: string;
   partChanged?: string;
 }
+
+export const historyKindLabel: Record<HistoryKind, string> = {
+  bakim: "Son bakım",
+  ariza: "Son arıza",
+  parca: "Değişen parça",
+  kontrol: "Yapılan kontrol",
+  test: "Son test",
+};
 
 export interface ClosureSummary {
   symptom: string;

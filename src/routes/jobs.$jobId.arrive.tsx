@@ -24,7 +24,7 @@ function Arrive() {
     <AppShell
       title="Sahaya varış"
       subtitle={job.code}
-      back={`/jobs/${job.id}` as never}
+      back
       footer={
         <button
           type="button"

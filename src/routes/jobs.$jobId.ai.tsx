@@ -29,9 +29,6 @@ function AiScreen() {
   if (!job || !brief) return null;
 
 
-  if (job.status !== "teshis" && job.status !== "beklemede" && job.status !== "tamamlandi") {
-    setStatus(job.id, "teshis");
-  }
 
   return (
     <AppShell

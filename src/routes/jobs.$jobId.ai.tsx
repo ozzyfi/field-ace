@@ -32,7 +32,7 @@ function AiScreen() {
 
   return (
     <AppShell
-      title="ToolA Saha Asistanı"
+      title="AI ile Teşhis Et"
       subtitle={job.code}
       back
       footer={

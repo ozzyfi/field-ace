@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertTriangle, ChevronRight, Clock, MapPin, Zap } from "lucide-react";
 import { useJobs } from "@/lib/store";
+import { BottomTabs } from "@/components/BottomTabs";
 import {
   priorityLabel,
   sourceLabel,
@@ -26,7 +27,8 @@ export const Route = createFileRoute("/")({
 
 function JobsIndex() {
   const jobs = useJobs();
-  const open = jobs.filter((j) => j.status !== "tamamlandi");
+  const open = jobs.filter((j) => j.status !== "tamamlandi" && j.status !== "beklemede");
+  const held = jobs.filter((j) => j.status === "beklemede");
   const done = jobs.filter((j) => j.status === "tamamlandi");
   const featured = open.find((j) => j.featured) ?? open[0];
   const rest = open.filter((j) => j.id !== featured?.id);

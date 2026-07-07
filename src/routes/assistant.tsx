@@ -152,32 +152,33 @@ export default function AssistantScreen() {
         <div ref={endRef} />
       </main>
 
-      <div className="sticky bottom-[57px] z-20 border-t border-border bg-background/95 px-3 py-2 backdrop-blur">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            send(input);
-          }}
-          className="flex items-center gap-2"
-        >
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="ToolA'ya sor…"
-            className="flex-1 rounded-full border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-foreground"
-          />
-          <button
-            type="submit"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground disabled:opacity-40"
-            disabled={!input.trim()}
-            aria-label="Gönder"
+      <div className="sticky bottom-0 z-30 bg-background/95 backdrop-blur">
+        <div className="border-t border-border px-3 py-2">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              send(input);
+            }}
+            className="mx-auto flex max-w-md items-center gap-2"
           >
-            <Send className="h-4 w-4" />
-          </button>
-        </form>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="ToolA'ya sor…"
+              className="flex-1 rounded-full border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-foreground"
+            />
+            <button
+              type="submit"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground disabled:opacity-40"
+              disabled={!input.trim()}
+              aria-label="Gönder"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </form>
+        </div>
+        <BottomTabs />
       </div>
-
-      <BottomTabs />
     </div>
   );
 }

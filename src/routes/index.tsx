@@ -43,12 +43,12 @@ function JobsIndex() {
           <h1 className="text-3xl font-bold tracking-tight">İşlerim</h1>
           <div className="text-right text-xs text-muted-foreground">
             <div className="font-semibold text-foreground">{open.length} açık</div>
-            <div>{done.length} tamamlanan</div>
+            <div>{held.length} beklemede</div>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 space-y-6 px-4 pb-16 pt-4">
+      <main className="flex-1 space-y-6 px-4 pb-4 pt-4">
         {featured ? (
           <section>
             <SectionLabel>Sıradaki iş</SectionLabel>
@@ -69,11 +69,11 @@ function JobsIndex() {
           </section>
         ) : null}
 
-        {done.length > 0 ? (
+        {held.length > 0 ? (
           <section>
-            <SectionLabel>Bugün tamamlanan</SectionLabel>
+            <SectionLabel>Beklemede</SectionLabel>
             <ul className="space-y-2">
-              {done.map((job) => (
+              {held.map((job) => (
                 <li key={job.id}>
                   <JobRow job={job} muted />
                 </li>
@@ -82,12 +82,14 @@ function JobsIndex() {
           </section>
         ) : null}
 
-        {open.length === 0 && done.length === 0 ? (
+        {open.length === 0 && held.length === 0 && done.length === 0 ? (
           <div className="card-surface p-6 text-center text-sm text-muted-foreground">
             Sana atanmış açık iş yok.
           </div>
         ) : null}
       </main>
+
+      <BottomTabs />
     </div>
   );
 }

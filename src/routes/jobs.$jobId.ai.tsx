@@ -1,8 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   PauseCircle,
   Plus,
   Send,
@@ -51,49 +49,95 @@ interface ChatMessage {
 }
 
 const PLACEHOLDERS = [
-  "Bu ölçüm normal mi?",
+  "ToolA'ya sor: bu ölçüm normal mi?",
   "Önce neyi kontrol etmeliyim?",
   "Bu hata kodu ne anlama geliyor?",
-  "Filtre temiz ama hâlâ soğutmuyor, sırada neye bakayım?",
+  "Filtre temiz ama hâlâ soğutmuyor, sırada ne var?",
   "Bu ses rulman mı kaplin mi olabilir?",
-  "Anlamadım, daha basit açıkla.",
-  "Bu işi kapatmak için yeterli kanıtım var mı?",
+  "Kapatmak için yeterli kanıtım var mı?",
 ];
 
 const SUGGESTED_QUESTIONS = [
   "Önce neyi kontrol etmeliyim?",
   "Bu ölçüm normal mi?",
-  "Anlamadım, daha basit açıkla.",
+  "Anlamadım, daha basit anlat.",
   "Kapatmak için yeterli kanıtım var mı?",
 ];
 
 function initialMessage(job: Job): ChatMessage {
+  const evCount = job.evidence.length;
+  const evSummary =
+    evCount === 0
+      ? "Henüz kanıt yok — konuşurken birlikte toplayabiliriz."
+      : `${evCount} kanıt topladın (${job.evidence
+          .slice(0, 3)
+          .map((e) => e.label)
+          .join(", ")}${evCount > 3 ? ", …" : ""}).`;
+
   const lastMaint = job.history.find((h) => h.kind === "bakim");
-  const similar = job.history.find((h) => h.kind === "ariza");
+  const similar = job.history.filter((h) => h.kind === "ariza" || h.kind === "parca");
 
+  let body: string;
+  let causes: string[];
+  let checks: string[];
   const sources: SourceRef[] = [];
-  if (lastMaint) {
-    sources.push({
-      label: "Ekipman geçmişi",
-      detail: `Son bakım · ${lastMaint.date} — ${lastMaint.summary}`,
-    });
-  }
-  if (similar) {
-    sources.push({
-      label: "Benzer vaka",
-      detail: `${similar.summary} → ${similar.action}`,
-    });
-  }
-  sources.push({ label: "Teknik kaynak", detail: "Bakım kılavuzu s.42" });
 
-  let text: string;
-  if (job.id === "job-1843") {
-    text = `Topladığın kanıtlara göre bu iş ${job.equipment} için ${job.title.toLowerCase()} gibi görünüyor. Ekipman geçmişinde son bakım 1 yıl önce yapılmış ve filtre + gaz kontrolü kaydı var. Benzer vakalarda filtre tıkanıklığı, düşük gaz basıncı ve dış ünite kontaktör arızası öne çıkmış. İlk olarak filtre durumunu, gaz basıncını ve dış ünite çalışma değerlerini kontrol etmeni öneririm.`;
-  } else if (job.id === "job-1842") {
-    text = `Kanıtlara ve ${job.equipment} geçmişine bakınca bu ${job.title.toLowerCase()} son 90 günde 3. kez tekrar ediyor. Vakaların 2'si kaplin hizasızlığı, 1'i rulman değişimi ile kapanmış. İlk olarak yatak sıcaklığını ölç, sonra kaplin hizasına lazerle bak.`;
+  if (job.id === "job-1842") {
+    body = `**${job.equipment}** için topladığın verilere ve ekipman geçmişine baktım. Bu ekipmanda son 90 günde 3 benzer kayıt var; vakaların 2'si **kaplin hizasızlığı**, 1'i **rulman değişimi** ile kapanmış. Debinin normal olması kavitasyon ihtimalini düşürüyor.`;
+    causes = [
+      "Kaplin hizasızlığı — en olası (%66)",
+      "Yatak / rulman aşınması — %28",
+      "Kavitasyon — düşük ihtimal",
+    ];
+    checks = [
+      "Yatak sıcaklığını ölç (referans < 65°C)",
+      "Kaplin hizasını lazerle kontrol et (≤ 0.05 mm)",
+      "Titreşim ölçümü al (ISO 10816 · Zone A/B)",
+    ];
+    sources.push(
+      { label: "Önceki kapanış", detail: "İE-1809 · kaplin hizası" },
+      { label: "İş emri", detail: "#1780 · rulman değişimi" },
+      { label: "Kılavuz", detail: "Bakım kılavuzu s.42" },
+    );
+  } else if (job.id === "job-1843") {
+    body = `**${job.equipment}** için topladığın kanıtlara baktım. Fan çalışıyor ama set-ölçüm farkı 5°C. ${
+      lastMaint ? `Son bakım ${lastMaint.date} (${lastMaint.action}). ` : ""
+    }Benzer vakalarda ilk sırada **düşük gaz basıncı** ve **tıkalı filtre** geliyor.`;
+    causes = [
+      "Gaz kaçağı / düşük şarj — %55",
+      "Tıkalı filtre veya evaporatör — %30",
+      "Kontaktör / elektriksel — düşük",
+    ];
+    checks = [
+      "Filtreyi çıkar ve görsel kontrol et",
+      "Dış ünitede gaz basıncını ölç",
+      "İç ünite üfleme sıcaklığını ölç",
+    ];
+    sources.push(
+      { label: "Kılavuz", detail: "Kullanım kılavuzu s.14" },
+      { label: "Servis notu", detail: "Klima · genel arıza akışı" },
+    );
   } else {
-    text = `${job.equipment} için topladığın kanıtları değerlendirdim. Ekipman geçmişi ve benzer vakalara bakınca önce görsel + işitsel kontrol, sonra referans ölçüm önerilir. Sapma %10'un üstündeyse müdahale gerekir.`;
+    body = `**${job.equipment}** için topladığın kanıtları değerlendirdim. Geçmiş kayıt sınırlı; önce görsel + işitsel kontrol, sonra referans ölçüm mantıklı görünüyor.`;
+    causes = ["Belirtiye özel — kanıt geldikçe daraltacağım"];
+    checks = ["Görsel kontrol yap", "Referans ölçüm al ve önceki değerle karşılaştır"];
+    sources.push({ label: "Prosedür", detail: "Genel teşhis akışı" });
   }
+
+  const text = [
+    `📋 **Kanıt değerlendirmesi**\n${evSummary}`,
+    `🧩 **Olası kök nedenler**\n${causes.map((c) => `• ${c}`).join("\n")}`,
+    `🔧 **Önerilen ilk kontroller**\n${checks.map((c) => `• ${c}`).join("\n")}`,
+    similar.length > 0
+      ? `📚 **Benzer vakalar**\n${similar
+          .slice(0, 2)
+          .map((h) => `• ${h.date}: ${h.summary} → ${h.action}`)
+          .join("\n")}`
+      : "",
+    body,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 
   return {
     id: `ai-init-${job.id}`,
@@ -103,7 +147,9 @@ function initialMessage(job: Job): ChatMessage {
     actions: [
       { id: "check-done", label: "Bu kontrolü yaptım" },
       { id: "add-measurement", label: "Ölçüm ekle" },
-      { id: "ask", label: "Anlamadım, daha basit anlat", payload: "Anlamadım, daha basit anlat." },
+      { id: "issue-confirmed", label: "Sorun bu çıktı" },
+      { id: "issue-rejected", label: "Sorun bu değil" },
+      { id: "ask", label: "Daha basit anlat", payload: "Anlamadım, daha basit anlat." },
     ],
   };
 }
@@ -116,8 +162,8 @@ function aiReply(job: Job, question: string): ChatMessage {
     return {
       id,
       role: "ai",
-      text: "Önce klimanın gazı yeterli mi ona bak. Gaz düşükse klima soğutmaz. Gaz düşükse kaçak olabilir. Basınç değerini ölç ve dış ünitede yağlı/ıslak iz var mı kontrol et.",
-      sources: [{ label: "Bakım kılavuzu", detail: "s.42 · basit teşhis akışı" }],
+      text: "Kısaca: önce klimanın gazı yeterli mi ona bak. Gaz düşükse klima soğutmaz ve genelde kaçak vardır. Basınç değerini ölç, dış ünitede yağlı/ıslak iz var mı kontrol et.",
+      sources: [{ label: "Kılavuz", detail: "s.42 · basit teşhis akışı" }],
       actions: [
         { id: "add-measurement", label: "Gaz basıncı ölçümü ekle" },
         { id: "check-done", label: "Kaçak izi yok" },
@@ -130,9 +176,9 @@ function aiReply(job: Job, question: string): ChatMessage {
     return {
       id,
       role: "ai",
-      text: "Filtre temizse sıradaki kontrol gaz basıncı ve kaçak ihtimali olmalı. Düşük gaz basıncı soğutma performansını düşürür. Önce basınç değerini ölçüm olarak ekle, sonra dış ünitede kaçak izi veya bağlantı noktalarında yağlanma olup olmadığını kontrol et.",
+      text: "Filtre temizse sıradaki adım gaz basıncı ve kaçak ihtimali. Önce basıncı ölçüm olarak ekle, sonra dış ünitede kaçak izi veya bağlantılarda yağlanma var mı bak.",
       sources: [
-        { label: "Bakım kılavuzu", detail: "s.42 · gaz basıncı referans aralığı" },
+        { label: "Kılavuz", detail: "s.42 · gaz basıncı referansı" },
         { label: "Benzer vaka", detail: "Klima Oda 218 · düşük gaz basıncı" },
       ],
       actions: [
@@ -149,10 +195,10 @@ function aiReply(job: Job, question: string): ChatMessage {
     return {
       id,
       role: "ai",
-      text: "Metalik ses + titreşim kombinasyonu bu ekipmanda genellikle kaplin hizasızlığına işaret eder. Rulman sorunu olsaydı yatak sıcaklığı 65°C üzerine çıkardı. Önce yatak sıcaklığını ölç: normalse kaplin hizasına lazerle bak.",
+      text: "Metalik ses + titreşim genellikle kaplin hizasızlığına işaret eder. Rulman olsaydı yatak sıcaklığı 65°C üzerine çıkardı. Önce sıcaklığı ölç, normalse kaplin hizasına lazerle bak.",
       sources: [
         { label: "Önceki kapanış", detail: "İş emri #1780 · kaplin hizası" },
-        { label: "Standart", detail: "ISO 10816 titreşim referansı" },
+        { label: "Standart", detail: "ISO 10816 titreşim" },
       ],
       actions: [
         { id: "add-measurement", label: "Sıcaklık ölçümü ekle" },
@@ -168,7 +214,7 @@ function aiReply(job: Job, question: string): ChatMessage {
       id,
       role: "ai",
       text: "Hata kodunu paylaşırsan üretici kılavuzundaki karşılığını çıkarabilirim. Kısa yol: panelden 'Alarm geçmişi' > son kayıt. Fotoğrafını kanıt olarak ekle, birlikte yorumlayalım.",
-      sources: [{ label: "Kullanım kılavuzu", detail: "alarm tablosu" }],
+      sources: [{ label: "Kılavuz", detail: "alarm tablosu" }],
       actions: [
         { id: "add-evidence", label: "Hata kodu fotoğrafı ekle" },
         { id: "go-hold", label: "Destek/parça bekliyorum" },
@@ -183,7 +229,7 @@ function aiReply(job: Job, question: string): ChatMessage {
       return {
         id,
         role: "ai",
-        text: "Evet, elinde fotoğraf ve ölçüm kanıtı var. Kök nedeni ve yaptığın işlemi kısaca girersen kapanışı hemen oluşturabiliriz.",
+        text: "Evet — fotoğraf ve ölçüm kanıtın var. Kök nedeni ve yaptığın işlemi kısaca girersen kapanışı hemen oluşturabiliriz.",
         actions: [
           { id: "go-close", label: "Kapanışa geç" },
           { id: "add-evidence", label: "Yine de ek kanıt ekle" },
@@ -193,7 +239,7 @@ function aiReply(job: Job, question: string): ChatMessage {
     return {
       id,
       role: "ai",
-      text: "Kapanış için en az bir fotoğraf ve bir ölçüm önerilir. Şu an eksik olan kanıt tipini ekle, sonra kapanışa geçelim.",
+      text: "Kapanış için en az bir fotoğraf ve bir ölçüm önerilir. Eksik olan kanıt tipini ekle, sonra kapanışa geçelim.",
       actions: [
         { id: "add-evidence", label: "Fotoğraf ekle" },
         { id: "add-measurement", label: "Ölçüm ekle" },
@@ -205,8 +251,8 @@ function aiReply(job: Job, question: string): ChatMessage {
     return {
       id,
       role: "ai",
-      text: "Güzel. Sıradaki kontrol: referans bir ölçüm al (sıcaklık ya da basınç) ve önceki değerlerle karşılaştır. Sapma %10 üstündeyse müdahale, altındaysa normal çalışma sayılır.",
-      sources: [{ label: "Bakım kılavuzu", detail: "test prosedürü · sapma eşiği" }],
+      text: "Güzel. Sıradaki adım: referans bir ölçüm al (sıcaklık ya da basınç) ve önceki değerle karşılaştır. Sapma %10 üstündeyse müdahale, altındaysa normal sayılır.",
+      sources: [{ label: "Kılavuz", detail: "test prosedürü · sapma eşiği" }],
       actions: [
         { id: "add-measurement", label: "Ölçüm ekle" },
         { id: "issue-confirmed", label: "Sorun bu çıktı" },
@@ -219,7 +265,7 @@ function aiReply(job: Job, question: string): ChatMessage {
     return {
       id,
       role: "ai",
-      text: "Tamam, kök nedeni doğruladık. Yaptığın müdahaleyi kısaca yaz, ToolA yapılandırılmış bir kapanış özetine çevirsin.",
+      text: "Tamam, kök nedeni doğruladık. Yaptığın müdahaleyi kısaca yaz, ToolA yapılandırılmış kapanış özetine çevirsin.",
       actions: [
         { id: "go-close", label: "Kapanışa geç" },
         { id: "add-evidence", label: "Kapanış öncesi fotoğraf ekle" },
@@ -231,9 +277,9 @@ function aiReply(job: Job, question: string): ChatMessage {
     return {
       id,
       role: "ai",
-      text: "Anladım, ilk hipotezi eliyoruz. Sıradaki olası kök neden: elektriksel/kontaktör tarafı. Dış ünitede kontaktörün çekip çekmediğine ve besleme voltajına bak. Değerleri ölçüm olarak eklersen daha kesin ilerleyebiliriz.",
+      text: "Anladım, ilk hipotezi eliyoruz. Sıradaki olası kök neden: elektriksel/kontaktör tarafı. Dış ünitede kontaktörün çekip çekmediğine ve besleme voltajına bak.",
       sources: [
-        { label: "Bakım kılavuzu", detail: "s.58 · elektriksel kontrol" },
+        { label: "Kılavuz", detail: "s.58 · elektriksel kontrol" },
         { label: "Benzer vaka", detail: "Oda 112 · kontaktör arızası" },
       ],
       actions: [
@@ -257,6 +303,20 @@ function aiReply(job: Job, question: string): ChatMessage {
   };
 }
 
+// Very small inline markdown for **bold** within chat text.
+function renderInline(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((p, i) =>
+    p.startsWith("**") && p.endsWith("**") ? (
+      <strong key={i} className="font-semibold text-foreground">
+        {p.slice(2, -2)}
+      </strong>
+    ) : (
+      <span key={i}>{p}</span>
+    ),
+  );
+}
+
 function AiScreen() {
   const { jobId } = Route.useParams();
   const job = useJob(jobId);
@@ -264,7 +324,6 @@ function AiScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
-  const [contextOpen, setContextOpen] = useState(false);
   const placeholder = useMemo(
     () => PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)],
     [],
@@ -324,6 +383,11 @@ function AiScreen() {
     sendMessage(a.payload ?? a.label);
   };
 
+  const lastHistory = job.history[0];
+  const historyNote = lastHistory
+    ? `${lastHistory.date}: ${lastHistory.summary} → ${lastHistory.action}`
+    : "Geçmiş kayıt yok";
+
   return (
     <AppShell
       title="AI ile Teşhis Et"
@@ -362,13 +426,24 @@ function AiScreen() {
         </form>
       }
     >
-      <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          ToolA, topladığın kanıtları, ekipman geçmişini, benzer vakaları ve teknik kaynakları kullanarak sana adım adım yardımcı olur.
-        </p>
+      <div className="space-y-3">
+        {/* Compact context card — doesn't dominate the screen */}
+        <div className="rounded-xl border border-border bg-secondary/40 px-3 py-2.5 text-xs">
+          <div className="text-sm font-semibold text-foreground leading-snug">{job.title}</div>
+          <div className="mt-0.5 text-muted-foreground">
+            {job.equipment} · {job.location}
+          </div>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            <span className="chip border border-border bg-background text-[11px] text-foreground/80">
+              {job.evidence.length} kanıt
+            </span>
+            <span className="chip border border-border bg-background text-[11px] text-foreground/80">
+              📜 {historyNote}
+            </span>
+          </div>
+        </div>
 
-        <ContextCard job={job} open={contextOpen} onToggle={() => setContextOpen((v) => !v)} />
-
+        {/* Chat body */}
         <div className="space-y-4 pb-2">
           {messages.map((m) =>
             m.role === "user" ? (
@@ -423,17 +498,21 @@ function AiBubble({ msg, onAction }: { msg: ChatMessage; onAction: (a: QuickActi
         <Sparkles className="h-3 w-3" />
         ToolA
       </div>
-      <div className="rounded-2xl rounded-tl-sm bg-secondary/60 px-3.5 py-2.5 text-sm leading-relaxed text-foreground">
-        {msg.text}
+      <div className="rounded-2xl rounded-tl-sm bg-secondary/60 px-3.5 py-2.5 text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+        {renderInline(msg.text)}
       </div>
       {msg.sources && msg.sources.length > 0 ? (
-        <ul className="space-y-0.5 pl-1">
+        <div className="flex flex-wrap gap-1.5 pl-1">
           {msg.sources.map((s, i) => (
-            <li key={i} className="text-[11px] text-muted-foreground">
-              ↳ <span className="font-medium text-foreground/80">{s.label}:</span> {s.detail}
-            </li>
+            <span
+              key={i}
+              className="chip border border-border bg-background/60 text-[10.5px] text-muted-foreground"
+              title={s.detail}
+            >
+              ↳ <span className="font-medium text-foreground/80">{s.label}:</span>&nbsp;{s.detail}
+            </span>
           ))}
-        </ul>
+        </div>
       ) : null}
       {msg.actions && msg.actions.length > 0 ? (
         <div className="flex flex-wrap gap-1.5 pt-1">
@@ -456,71 +535,6 @@ function AiBubble({ msg, onAction }: { msg: ChatMessage; onAction: (a: QuickActi
               {a.label}
             </button>
           ))}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function ContextCard({
-  job,
-  open,
-  onToggle,
-}: {
-  job: Job;
-  open: boolean;
-  onToggle: () => void;
-}) {
-  const evCount = job.evidence.length;
-  const histCount = job.history.length;
-  return (
-    <div className="card-surface">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex w-full items-center justify-between px-3 py-2.5 text-left"
-      >
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Bağlam · {evCount} kanıt · {histCount} geçmiş kayıt
-        </div>
-        {open ? (
-          <ChevronUp className="h-4 w-4 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        )}
-      </button>
-      {open ? (
-        <div className="space-y-3 border-t border-border px-3 py-3 text-xs">
-          <div>
-            <div className="font-semibold text-foreground/80">Toplanan kanıtlar</div>
-            {evCount === 0 ? (
-              <p className="mt-0.5 text-muted-foreground">Kanıt yok.</p>
-            ) : (
-              <ul className="mt-1 space-y-0.5">
-                {job.evidence.map((ev) => (
-                  <li key={ev.id} className="text-muted-foreground">
-                    • <span className="text-foreground/90">{ev.label}</span>
-                    {ev.value ? `: ${ev.value}` : ev.note ? ` — ${ev.note}` : ""}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div>
-            <div className="font-semibold text-foreground/80">Ekipman geçmişi</div>
-            {histCount === 0 ? (
-              <p className="mt-0.5 text-muted-foreground">Kayıt yok.</p>
-            ) : (
-              <ul className="mt-1 space-y-0.5">
-                {job.history.slice(0, 4).map((h) => (
-                  <li key={h.id} className="text-muted-foreground">
-                    • <span className="text-foreground/90">{h.rootCause}</span> — {h.summary}{" "}
-                    <span className="text-muted-foreground/70">({h.date})</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
         </div>
       ) : null}
     </div>

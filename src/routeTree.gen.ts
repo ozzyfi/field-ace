@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as HistoryRouteImport } from './routes/history'
+import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JobsJobIdIndexRouteImport } from './routes/jobs.$jobId.index'
 import { Route as JobsJobIdSummaryRouteImport } from './routes/jobs.$jobId.summary'
@@ -22,6 +24,16 @@ import { Route as JobsJobIdAiRouteImport } from './routes/jobs.$jobId.ai'
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssistantRoute = AssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -67,6 +79,8 @@ const JobsJobIdAiRoute = JobsJobIdAiRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/assistant': typeof AssistantRoute
+  '/history': typeof HistoryRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/jobs/$jobId/ai': typeof JobsJobIdAiRoute
   '/jobs/$jobId/close': typeof JobsJobIdCloseRoute
@@ -78,6 +92,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/assistant': typeof AssistantRoute
+  '/history': typeof HistoryRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/jobs/$jobId/ai': typeof JobsJobIdAiRoute
   '/jobs/$jobId/close': typeof JobsJobIdCloseRoute
@@ -90,6 +106,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/assistant': typeof AssistantRoute
+  '/history': typeof HistoryRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/jobs/$jobId/ai': typeof JobsJobIdAiRoute
   '/jobs/$jobId/close': typeof JobsJobIdCloseRoute
@@ -103,6 +121,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/assistant'
+    | '/history'
     | '/sitemap.xml'
     | '/jobs/$jobId/ai'
     | '/jobs/$jobId/close'
@@ -114,6 +134,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/assistant'
+    | '/history'
     | '/sitemap.xml'
     | '/jobs/$jobId/ai'
     | '/jobs/$jobId/close'
@@ -125,6 +147,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/assistant'
+    | '/history'
     | '/sitemap.xml'
     | '/jobs/$jobId/ai'
     | '/jobs/$jobId/close'
@@ -137,6 +161,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AssistantRoute: typeof AssistantRoute
+  HistoryRoute: typeof HistoryRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   JobsJobIdAiRoute: typeof JobsJobIdAiRoute
   JobsJobIdCloseRoute: typeof JobsJobIdCloseRoute
@@ -154,6 +180,20 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assistant': {
+      id: '/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AssistantRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -217,6 +257,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AssistantRoute: AssistantRoute,
+  HistoryRoute: HistoryRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   JobsJobIdAiRoute: JobsJobIdAiRoute,
   JobsJobIdCloseRoute: JobsJobIdCloseRoute,

@@ -96,7 +96,8 @@ export interface Job {
   featured?: boolean;
 }
 
-const now = new Date();
+// Fixed base to keep SSR and client renders deterministic.
+const now = new Date("2026-07-07T09:00:00Z");
 const iso = (offsetHours: number) =>
   new Date(now.getTime() + offsetHours * 3600 * 1000).toISOString();
 

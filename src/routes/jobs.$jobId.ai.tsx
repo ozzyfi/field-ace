@@ -40,189 +40,281 @@ interface SourceRef {
   detail: string;
 }
 
+interface DetailSection {
+  title: string;
+  items: string[];
+}
+
 interface ChatMessage {
   id: string;
   role: "user" | "ai";
   text: string;
+  details?: DetailSection[];
   sources?: SourceRef[];
   actions?: QuickAction[];
 }
 
-const PLACEHOLDERS = [
-  "ToolA'ya sor: bu ölçüm normal mi?",
-  "Önce neyi kontrol etmeliyim?",
-  "Bu hata kodu ne anlama geliyor?",
-  "Filtre temiz ama hâlâ soğutmuyor, sırada ne var?",
-  "Bu ses rulman mı kaplin mi olabilir?",
-  "Kapatmak için yeterli kanıtım var mı?",
-];
+// --- Job-context helpers -------------------------------------------------
 
-const SUGGESTED_QUESTIONS = [
-  "Önce neyi kontrol etmeliyim?",
-  "Bu ölçüm normal mi?",
-  "Anlamadım, daha basit anlat.",
-  "Kapatmak için yeterli kanıtım var mı?",
-];
+type JobKind = "pompa" | "klima" | "jenerator" | "sensor" | "konveyor" | "genel";
+
+function jobKind(job: Job): JobKind {
+  const s = `${job.equipment} ${job.title}`.toLowerCase();
+  if (s.includes("pompa")) return "pompa";
+  if (s.includes("klima")) return "klima";
+  if (s.includes("jenerat")) return "jenerator";
+  if (s.includes("sensör") || s.includes("sensor")) return "sensor";
+  if (s.includes("konveyör") || s.includes("konveyor") || s.includes("switch")) return "konveyor";
+  return "genel";
+}
+
+const PLACEHOLDERS_BY_KIND: Record<JobKind, string[]> = {
+  pompa: [
+    "Titreşim ölçümü yüksek, sırada neyi kontrol edeyim?",
+    "Kaplin hizası normal çıktı, başka neye bakayım?",
+    "Bu titreşim değeri normal mi?",
+    "Yatak sıcaklığı 62°C, normal mi?",
+  ],
+  klima: [
+    "Filtre temiz ama hâlâ soğutmuyor, sırada ne var?",
+    "Gaz basıncı düşük çıktı, sıradaki adım ne?",
+    "Bu üfleme sıcaklığı normal mi?",
+  ],
+  jenerator: [
+    "Akü voltajı 11.8V, değişmeli mi?",
+    "Yağ seviyesi düşük — devreye almadan önce ne yapmalıyım?",
+    "Yakıt filtresini de değiştirmeli miyim?",
+  ],
+  sensor: [
+    "Sensör sinyal vermiyor, önce neyi kontrol edeyim?",
+    "Kablo bağlantısı doğru mu?",
+    "Devreye alma için hangi test gerekli?",
+  ],
+  konveyor: [
+    "Acil stop test etti ama pull-cord yanıt vermiyor.",
+    "Switch kontağı ölçüldü, sıradaki adım ne?",
+    "Test etiketine ne yazmalıyım?",
+  ],
+  genel: [
+    "Önce neyi kontrol etmeliyim?",
+    "Bu ölçüm normal mi?",
+    "Kapatmak için yeterli kanıtım var mı?",
+  ],
+};
+
+const SUGGESTED_BY_KIND: Record<JobKind, string[]> = {
+  pompa: [
+    "Kaplin mi rulman mı nasıl ayırt ederim?",
+    "Titreşim değeri normal mi?",
+    "Kapanış için hangi ölçüm gerekli?",
+    "Rulman değişimi gerekir mi?",
+  ],
+  klima: [
+    "Önce filtre mi gaz mı kontrol edeyim?",
+    "Gaz basıncı ne olmalı?",
+    "Kaçak izini nasıl anlarım?",
+    "Kapanış için hangi ölçüm gerekli?",
+  ],
+  jenerator: [
+    "Akü sağlıklı mı nasıl anlarım?",
+    "Test çalıştırması ne kadar sürmeli?",
+    "Yağ değişimi ne zaman gerekir?",
+    "Kapanış için hangi kontroller yeter?",
+  ],
+  sensor: [
+    "Sinyal seviyesi ne olmalı?",
+    "Kablolamayı nasıl doğrularım?",
+    "Devreye alma testi nasıl yapılır?",
+    "Kapanış için hangi kanıt gerekli?",
+  ],
+  konveyor: [
+    "Hangi switch'leri sırayla test etmeliyim?",
+    "Ölçüm değerleri ne olmalı?",
+    "Kayıt için hangi foto gerekli?",
+    "Test etiketine ne yazayım?",
+  ],
+  genel: [
+    "Önce neyi kontrol etmeliyim?",
+    "Bu ölçüm normal mi?",
+    "Anlamadım, daha basit anlat.",
+    "Kapatmak için yeterli kanıtım var mı?",
+  ],
+};
 
 function initialMessage(job: Job): ChatMessage {
+  const kind = jobKind(job);
   const evCount = job.evidence.length;
-  const evSummary =
+  const evPart =
     evCount === 0
-      ? "Henüz kanıt yok — konuşurken birlikte toplayabiliriz."
-      : `${evCount} kanıt topladın (${job.evidence
-          .slice(0, 3)
-          .map((e) => e.label)
-          .join(", ")}${evCount > 3 ? ", …" : ""}).`;
+      ? "Henüz kanıt yok"
+      : `Topladığın ${evCount} kanıt`;
 
-  const lastMaint = job.history.find((h) => h.kind === "bakim");
-  const similar = job.history.filter((h) => h.kind === "ariza" || h.kind === "parca");
-
-  let body: string;
-  let causes: string[];
-  let checks: string[];
+  let text: string;
+  const details: DetailSection[] = [];
   const sources: SourceRef[] = [];
+  let actions: QuickAction[] = [];
 
-  if (job.id === "job-1842") {
-    body = `**${job.equipment}** için topladığın verilere ve ekipman geçmişine baktım. Bu ekipmanda son 90 günde 3 benzer kayıt var; vakaların 2'si **kaplin hizasızlığı**, 1'i **rulman değişimi** ile kapanmış. Debinin normal olması kavitasyon ihtimalini düşürüyor.`;
-    causes = [
-      "Kaplin hizasızlığı — en olası (%66)",
-      "Yatak / rulman aşınması — %28",
-      "Kavitasyon — düşük ihtimal",
-    ];
-    checks = [
-      "Yatak sıcaklığını ölç (referans < 65°C)",
-      "Kaplin hizasını lazerle kontrol et (≤ 0.05 mm)",
-      "Titreşim ölçümü al (ISO 10816 · Zone A/B)",
-    ];
+  if (kind === "pompa") {
+    text = `${evPart} ve ekipman geçmişine göre en olası neden **kaplin hizasızlığı** görünüyor. Önce yatak sıcaklığını, kaplin hizasını ve titreşim değerini kontrol etmeni öneririm.`;
+    details.push(
+      {
+        title: "Olası nedenler",
+        items: [
+          "Kaplin hizasızlığı — %66",
+          "Yatak / rulman aşınması — %28",
+          "Kavitasyon — düşük ihtimal",
+        ],
+      },
+      {
+        title: "Önerilen kontroller",
+        items: [
+          "Yatak sıcaklığı (< 65°C)",
+          "Kaplin hizası, lazer (≤ 0.05 mm)",
+          "Titreşim (ISO 10816 Zone A/B)",
+        ],
+      },
+      {
+        title: "Benzer vakalar",
+        items: [
+          "12 gün önce: yüksek titreşim → lazer hizalama",
+          "38 gün önce: ses/ısınma → rulman değişimi",
+        ],
+      },
+    );
     sources.push(
       { label: "Önceki kapanış", detail: "İE-1809 · kaplin hizası" },
       { label: "İş emri", detail: "#1780 · rulman değişimi" },
       { label: "Kılavuz", detail: "Bakım kılavuzu s.42" },
     );
-  } else if (job.id === "job-1843") {
-    body = `**${job.equipment}** için topladığın kanıtlara baktım. Fan çalışıyor ama set-ölçüm farkı 5°C. ${
-      lastMaint ? `Son bakım ${lastMaint.date} (${lastMaint.action}). ` : ""
-    }Benzer vakalarda ilk sırada **düşük gaz basıncı** ve **tıkalı filtre** geliyor.`;
-    causes = [
-      "Gaz kaçağı / düşük şarj — %55",
-      "Tıkalı filtre veya evaporatör — %30",
-      "Kontaktör / elektriksel — düşük",
+    actions = [
+      { id: "check-done", label: "Bu kontrolü yaptım" },
+      { id: "add-measurement", label: "Ölçüm ekle" },
+      { id: "issue-confirmed", label: "Sorun bu çıktı" },
+      { id: "issue-rejected", label: "Sorun bu değil" },
     ];
-    checks = [
-      "Filtreyi çıkar ve görsel kontrol et",
-      "Dış ünitede gaz basıncını ölç",
-      "İç ünite üfleme sıcaklığını ölç",
-    ];
+  } else if (kind === "klima") {
+    text = `${evPart} ve ekipman geçmişine göre soğutmama en çok **düşük gaz basıncı** ya da **tıkalı filtre** kaynaklı oluyor. Önce filtreyi kontrol et, sonra gaz basıncını ölç.`;
+    details.push(
+      {
+        title: "Olası nedenler",
+        items: [
+          "Gaz kaçağı / düşük şarj — %55",
+          "Tıkalı filtre / evaporatör — %30",
+          "Kontaktör / elektriksel — düşük",
+        ],
+      },
+      {
+        title: "Önerilen kontroller",
+        items: [
+          "Filtre görsel kontrol",
+          "Gaz basıncı ölçümü (dış ünite)",
+          "İç ünite üfleme sıcaklığı",
+        ],
+      },
+    );
     sources.push(
       { label: "Kılavuz", detail: "Kullanım kılavuzu s.14" },
       { label: "Servis notu", detail: "Klima · genel arıza akışı" },
     );
+    actions = [
+      { id: "check-done", label: "Filtreyi kontrol ettim" },
+      { id: "add-measurement", label: "Gaz basıncı ölçümü ekle" },
+      { id: "issue-confirmed", label: "Sorun bu çıktı" },
+      { id: "issue-rejected", label: "Sorun bu değil" },
+    ];
   } else {
-    body = `**${job.equipment}** için topladığın kanıtları değerlendirdim. Geçmiş kayıt sınırlı; önce görsel + işitsel kontrol, sonra referans ölçüm mantıklı görünüyor.`;
-    causes = ["Belirtiye özel — kanıt geldikçe daraltacağım"];
-    checks = ["Görsel kontrol yap", "Referans ölçüm al ve önceki değerle karşılaştır"];
+    text = `${evPart} ile başlıyoruz. Bu ekipmanda geçmiş kayıt sınırlı; önce görsel + işitsel kontrol, sonra bir referans ölçüm mantıklı.`;
+    details.push({
+      title: "Önerilen kontroller",
+      items: ["Görsel kontrol", "Referans ölçüm al ve önceki değerle karşılaştır"],
+    });
     sources.push({ label: "Prosedür", detail: "Genel teşhis akışı" });
+    actions = [
+      { id: "check-done", label: "Görsel kontrolü yaptım" },
+      { id: "add-measurement", label: "Ölçüm ekle" },
+      { id: "issue-confirmed", label: "Sorun bu çıktı" },
+    ];
   }
-
-  const text = [
-    `📋 **Kanıt değerlendirmesi**\n${evSummary}`,
-    `🧩 **Olası kök nedenler**\n${causes.map((c) => `• ${c}`).join("\n")}`,
-    `🔧 **Önerilen ilk kontroller**\n${checks.map((c) => `• ${c}`).join("\n")}`,
-    similar.length > 0
-      ? `📚 **Benzer vakalar**\n${similar
-          .slice(0, 2)
-          .map((h) => `• ${h.date}: ${h.summary} → ${h.action}`)
-          .join("\n")}`
-      : "",
-    body,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
 
   return {
     id: `ai-init-${job.id}`,
     role: "ai",
     text,
+    details,
     sources,
-    actions: [
-      { id: "check-done", label: "Bu kontrolü yaptım" },
-      { id: "add-measurement", label: "Ölçüm ekle" },
-      { id: "issue-confirmed", label: "Sorun bu çıktı" },
-      { id: "issue-rejected", label: "Sorun bu değil" },
-      { id: "ask", label: "Daha basit anlat", payload: "Anlamadım, daha basit anlat." },
-    ],
+    actions,
   };
 }
 
 function aiReply(job: Job, question: string): ChatMessage {
   const q = question.toLowerCase();
+  const kind = jobKind(job);
   const id = `ai-${Date.now()}`;
 
   if (q.includes("basit") || q.includes("anlamad")) {
     return {
       id,
       role: "ai",
-      text: "Kısaca: önce klimanın gazı yeterli mi ona bak. Gaz düşükse klima soğutmaz ve genelde kaçak vardır. Basınç değerini ölç, dış ünitede yağlı/ıslak iz var mı kontrol et.",
+      text:
+        kind === "pompa"
+          ? "Kısaca: önce yatak sıcak mı ona bak. Sıcaksa rulman zorlanıyor demektir. Değilse kaplin hizası bozulmuş olabilir; lazerle ölçmek gerekir."
+          : "Kısaca: önce basit görsel kontrol yap, sonra bir ölçüm al ve önceki değerle karşılaştır. Sapma büyükse müdahale gerekir.",
       sources: [{ label: "Kılavuz", detail: "s.42 · basit teşhis akışı" }],
       actions: [
-        { id: "add-measurement", label: "Gaz basıncı ölçümü ekle" },
-        { id: "check-done", label: "Kaçak izi yok" },
-        { id: "issue-confirmed", label: "Kaçak izi var" },
+        { id: "add-measurement", label: "Ölçüm ekle" },
+        { id: "check-done", label: "Kontrolü yaptım" },
       ],
     };
   }
 
-  if (q.includes("filtre") || q.includes("gaz") || q.includes("basınç") || q.includes("basinc")) {
+  if (kind === "pompa" && (q.includes("kaplin") || q.includes("rulman"))) {
     return {
       id,
       role: "ai",
-      text: "Filtre temizse sıradaki adım gaz basıncı ve kaçak ihtimali. Önce basıncı ölçüm olarak ekle, sonra dış ünitede kaçak izi veya bağlantılarda yağlanma var mı bak.",
+      text: "Ayırt etmenin en hızlı yolu yatak sıcaklığı. Rulman aşınmışsa yatak 65°C üzerine çıkar. Sıcaklık normalse büyük ihtimalle kaplin hizasızlığıdır — lazerle 0.05 mm üstü sapma anlamlıdır.",
       sources: [
-        { label: "Kılavuz", detail: "s.42 · gaz basıncı referansı" },
-        { label: "Benzer vaka", detail: "Klima Oda 218 · düşük gaz basıncı" },
-      ],
-      actions: [
-        { id: "add-measurement", label: "Gaz basıncı ölçümü ekle" },
-        { id: "issue-confirmed", label: "Kaçak izi var" },
-        { id: "check-done", label: "Kaçak izi yok" },
-        { id: "go-close", label: "Kapanışa geç" },
-        { id: "go-hold", label: "Destek/parça bekliyorum" },
-      ],
-    };
-  }
-
-  if (q.includes("ses") || q.includes("titre") || q.includes("rulman") || q.includes("kaplin")) {
-    return {
-      id,
-      role: "ai",
-      text: "Metalik ses + titreşim genellikle kaplin hizasızlığına işaret eder. Rulman olsaydı yatak sıcaklığı 65°C üzerine çıkardı. Önce sıcaklığı ölç, normalse kaplin hizasına lazerle bak.",
-      sources: [
-        { label: "Önceki kapanış", detail: "İş emri #1780 · kaplin hizası" },
+        { label: "Önceki kapanış", detail: "#1780 · rulman değişimi" },
         { label: "Standart", detail: "ISO 10816 titreşim" },
       ],
       actions: [
         { id: "add-measurement", label: "Sıcaklık ölçümü ekle" },
         { id: "add-measurement", label: "Titreşim ölçümü ekle" },
         { id: "issue-confirmed", label: "Sorun bu çıktı" },
-        { id: "issue-rejected", label: "Sorun bu değil" },
       ],
     };
   }
 
-  if (q.includes("hata kodu") || q.includes("kod")) {
+  if (kind === "pompa" && q.includes("titreş")) {
     return {
       id,
       role: "ai",
-      text: "Hata kodunu paylaşırsan üretici kılavuzundaki karşılığını çıkarabilirim. Kısa yol: panelden 'Alarm geçmişi' > son kayıt. Fotoğrafını kanıt olarak ekle, birlikte yorumlayalım.",
-      sources: [{ label: "Kılavuz", detail: "alarm tablosu" }],
+      text: "ISO 10816 Zone A/B içindeyse normal, C'ye giriyorsa müdahale. Ölçtüğün değeri paylaş, birlikte yorumlayalım.",
+      sources: [{ label: "Standart", detail: "ISO 10816 sınır tablosu" }],
       actions: [
-        { id: "add-evidence", label: "Hata kodu fotoğrafı ekle" },
-        { id: "go-hold", label: "Destek/parça bekliyorum" },
+        { id: "add-measurement", label: "Titreşim ölçümü ekle" },
+        { id: "issue-confirmed", label: "Sorun bu çıktı" },
       ],
     };
   }
 
-  if (q.includes("yeterli") || q.includes("kapat")) {
+  if (kind === "klima" && (q.includes("gaz") || q.includes("basınç") || q.includes("basinc") || q.includes("filtre"))) {
+    return {
+      id,
+      role: "ai",
+      text: "Filtre temizse sıradaki adım gaz basıncı ve kaçak ihtimali. Basıncı ölçüm olarak ekle, sonra dış ünitede kaçak izi / yağlanma var mı bak.",
+      sources: [
+        { label: "Kılavuz", detail: "s.42 · gaz basıncı referansı" },
+        { label: "Benzer vaka", detail: "Klima Oda 218 · düşük gaz" },
+      ],
+      actions: [
+        { id: "add-measurement", label: "Gaz basıncı ölçümü ekle" },
+        { id: "issue-confirmed", label: "Kaçak izi var" },
+        { id: "check-done", label: "Kaçak izi yok" },
+      ],
+    };
+  }
+
+  if (q.includes("yeterli") || q.includes("kapat") || q.includes("kapanış") || q.includes("kapanis")) {
     const hasPhoto = job.evidence.some((e) => e.type === "foto" || e.type === "parca_foto");
     const hasMeasure = job.evidence.some((e) => e.type === "olcum");
     if (hasPhoto && hasMeasure) {
@@ -247,20 +339,6 @@ function aiReply(job: Job, question: string): ChatMessage {
     };
   }
 
-  if (q.includes("kontrolü yaptım") || q.includes("kontrolu yaptim")) {
-    return {
-      id,
-      role: "ai",
-      text: "Güzel. Sıradaki adım: referans bir ölçüm al (sıcaklık ya da basınç) ve önceki değerle karşılaştır. Sapma %10 üstündeyse müdahale, altındaysa normal sayılır.",
-      sources: [{ label: "Kılavuz", detail: "test prosedürü · sapma eşiği" }],
-      actions: [
-        { id: "add-measurement", label: "Ölçüm ekle" },
-        { id: "issue-confirmed", label: "Sorun bu çıktı" },
-        { id: "issue-rejected", label: "Sorun bu değil" },
-      ],
-    };
-  }
-
   if (q.includes("sorun bu çıktı") || q.includes("sorun bu cikti")) {
     return {
       id,
@@ -277,13 +355,12 @@ function aiReply(job: Job, question: string): ChatMessage {
     return {
       id,
       role: "ai",
-      text: "Anladım, ilk hipotezi eliyoruz. Sıradaki olası kök neden: elektriksel/kontaktör tarafı. Dış ünitede kontaktörün çekip çekmediğine ve besleme voltajına bak.",
-      sources: [
-        { label: "Kılavuz", detail: "s.58 · elektriksel kontrol" },
-        { label: "Benzer vaka", detail: "Oda 112 · kontaktör arızası" },
-      ],
+      text:
+        kind === "pompa"
+          ? "Tamam, kaplin hipotezini eliyoruz. Sıradaki olası neden rulman/yatak. Sıcaklık ve titreşim spektrumu bir arada anlamlı — ikisini de ölçelim."
+          : "Anladım, ilk hipotezi eliyoruz. Sıradaki olası kök nedene bakalım — bir sonraki ölçümü alıp paylaş.",
       actions: [
-        { id: "add-measurement", label: "Voltaj ölçümü ekle" },
+        { id: "add-measurement", label: "Ölçüm ekle" },
         { id: "issue-confirmed", label: "Sorun bu çıktı" },
         { id: "go-hold", label: "Parça bekliyorum" },
       ],
@@ -303,7 +380,6 @@ function aiReply(job: Job, question: string): ChatMessage {
   };
 }
 
-// Very small inline markdown for **bold** within chat text.
 function renderInline(text: string) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return parts.map((p, i) =>
@@ -324,9 +400,14 @@ function AiScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
-  const placeholder = useMemo(
-    () => PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)],
-    [],
+  const placeholder = useMemo(() => {
+    if (!job) return "ToolA'ya sor…";
+    const list = PLACEHOLDERS_BY_KIND[jobKind(job)];
+    return list[Math.floor(Math.random() * list.length)];
+  }, [job]);
+  const suggestedQuestions = useMemo(
+    () => (job ? SUGGESTED_BY_KIND[jobKind(job)] : []),
+    [job],
   );
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -427,7 +508,6 @@ function AiScreen() {
       }
     >
       <div className="space-y-3">
-        {/* Compact context card — doesn't dominate the screen */}
         <div className="rounded-xl border border-border bg-secondary/40 px-3 py-2.5 text-xs">
           <div className="text-sm font-semibold text-foreground leading-snug">{job.title}</div>
           <div className="mt-0.5 text-muted-foreground">
@@ -443,7 +523,6 @@ function AiScreen() {
           </div>
         </div>
 
-        {/* Chat body */}
         <div className="space-y-4 pb-2">
           {messages.map((m) =>
             m.role === "user" ? (
@@ -470,7 +549,7 @@ function AiScreen() {
                 Hızlı soru
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {SUGGESTED_QUESTIONS.map((q) => (
+                {suggestedQuestions.map((q) => (
                   <button
                     key={q}
                     type="button"
@@ -501,6 +580,26 @@ function AiBubble({ msg, onAction }: { msg: ChatMessage; onAction: (a: QuickActi
       <div className="rounded-2xl rounded-tl-sm bg-secondary/60 px-3.5 py-2.5 text-sm leading-relaxed text-foreground whitespace-pre-wrap">
         {renderInline(msg.text)}
       </div>
+      {msg.details && msg.details.length > 0 ? (
+        <div className="ml-1 space-y-1.5">
+          {msg.details.map((d, i) => (
+            <details
+              key={i}
+              open={i === 0}
+              className="rounded-lg border border-border bg-background/40 px-2.5 py-1.5 text-xs"
+            >
+              <summary className="cursor-pointer select-none font-medium text-foreground/90">
+                {d.title}
+              </summary>
+              <ul className="mt-1.5 space-y-1 pl-1 text-muted-foreground">
+                {d.items.map((it, j) => (
+                  <li key={j}>• {it}</li>
+                ))}
+              </ul>
+            </details>
+          ))}
+        </div>
+      ) : null}
       {msg.sources && msg.sources.length > 0 ? (
         <div className="flex flex-wrap gap-1.5 pl-1">
           {msg.sources.map((s, i) => (
